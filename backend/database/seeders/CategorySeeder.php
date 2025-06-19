@@ -11,7 +11,21 @@ class CategorySeeder extends Seeder
     {
         DB::table('categories')->insert([
             'id' => 1,
-            'name' => 'Default Category',
+            'name' => 'Mobile',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('categories')->insert([
+            'id' => 2,
+            'name' => 'Tablet',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('categories')->insert([
+            'id' => 3,
+            'name' => 'Wireless Buds',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

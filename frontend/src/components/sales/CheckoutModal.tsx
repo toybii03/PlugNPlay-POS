@@ -106,6 +106,87 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
         })),
       });
 
+      // Send receipt data to Make.com webhook
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        
+        if (!paymentResponse.data || !paymentResponse.data.id) {
+          console.error("Invalid payment response:", paymentResponse);
+          throw new Error("Payment response is missing data or ID");
+        }
+
+        // Format currency for better display
+        const formatCurrency = (amount: number) => {
+          return Number(amount).toFixed(2);  // Return just the number for Make.com
+        };
+
+        // Calculate change amount
+        const changeAmount = paymentMethod === "cash" 
+          ? Math.max(0, parseFloat(cashReceived) - total)
+          : 0;
+
+        // Create items array first for debugging
+        const itemsList = items.map(item => ({
+          name: item.name,
+          qty: item.quantity,
+          price: formatCurrency(Number(item.price)),
+          total: formatCurrency(Number(item.quantity) * Number(item.price))
+        }));
+
+        console.log("Items list:", itemsList);
+
+        const webhookData = {
+          transaction_id: paymentResponse.data.id,
+          date: new Date().toLocaleString(),
+          cashier_name: user.name || "Unknown",
+          payment_method: paymentMethod.toUpperCase(),
+          amount_paid: formatCurrency(paymentMethod === "cash" ? parseFloat(cashReceived) : total),
+          change_amount: formatCurrency(changeAmount),
+          customer_name: customerName || "N/A",
+          customer_email: customerEmail || "N/A",
+          customer_phone: customerPhone || "N/A",
+          items: itemsList,
+          subtotal: formatCurrency(subtotal),
+          tax: formatCurrency(tax),
+          total: formatCurrency(total),
+          to_email: customerEmail || "*",  // Use customer email or fallback
+          subject: `Receipt for Transaction #${paymentResponse.data.id}`
+        };
+
+        console.log("Sending webhook data:", webhookData);
+
+        const webhookResponse = await fetch("https://hook.us2.make.com/v73220t1pq8in6cctxbb8noh3g1wl2uc", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(webhookData),
+        });
+
+        const responseText = await webhookResponse.text();
+        console.log("Webhook response status:", webhookResponse.status);
+        console.log("Webhook response body:", responseText);
+
+        if (!webhookResponse.ok) {
+          throw new Error(`Webhook failed with status: ${webhookResponse.status}, response: ${responseText}`);
+        }
+
+        toast({
+          title: "Payment Successful",
+          description: `Transaction #${paymentResponse.data.id} completed. Receipt sent to ${customerEmail || "system"}`,
+        });
+
+        console.log("Receipt sent successfully");
+      } catch (error) {
+        console.error("Failed to send receipt to Make.com:", error);
+        toast({
+          title: "Warning",
+          description: "Payment successful but failed to send receipt. Please check the system logs.",
+          variant: "destructive",
+        });
+      }
+
       toast({
         title: "Payment Successful",
         description: `Transaction ID: ${paymentResponse.data.id}. Receipt printed.`,

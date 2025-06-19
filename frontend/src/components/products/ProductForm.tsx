@@ -259,7 +259,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
           required
         >
           <option value="">Select a category</option>
-          <option value="1">Default Category</option>
+          <option value="1">Mobile</option>
+          <option value="2">Tablet</option>
+          <option value="3">Wireless Buds</option>
         </select>
         {errors.category_id && (
           <p className="text-red-600">{errors.category_id}</p>
