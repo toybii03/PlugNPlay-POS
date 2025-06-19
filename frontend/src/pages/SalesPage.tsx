@@ -45,6 +45,52 @@ const SalesPage: React.FC = () => {
     }
   };
 
+  // Function to update product stock in the local state
+  const updateProductStock = (productId: string, newQuantity: number) => {
+    setProducts(prevProducts =>
+      prevProducts.map(product =>
+        product.id === productId
+          ? { ...product, quantity: newQuantity }
+          : product
+      )
+    );
+  };
+
+  // Enhanced addItem handler
+  const handleAddItem = (product: any) => {
+    if (product.quantity > 0) {
+      addItem(product);
+      updateProductStock(product.id, product.quantity - 1);
+    }
+  };
+
+  // Enhanced updateQuantity handler
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    const product = products.find(p => p.id === productId);
+    const currentItem = items.find(item => item.id === productId);
+    
+    if (!product || !currentItem) return;
+
+    const quantityDiff = newQuantity - currentItem.quantity;
+    const newStock = product.quantity - quantityDiff;
+
+    if (newStock >= 0 && newQuantity >= 0) {
+      updateQuantity(productId, newQuantity);
+      updateProductStock(productId, newStock);
+    }
+  };
+
+  // Enhanced removeItem handler
+  const handleRemoveItem = (productId: string) => {
+    const item = items.find(item => item.id === productId);
+    const product = products.find(p => p.id === productId);
+    
+    if (item && product) {
+      removeItem(productId);
+      updateProductStock(productId, product.quantity + item.quantity);
+    }
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -221,8 +267,9 @@ const SalesPage: React.FC = () => {
                       {quantity === 0 ? (
                         <Button
                           size="sm"
-                          onClick={() => addItem(product)}
+                          onClick={() => handleAddItem(product)}
                           className="h-8"
+                          disabled={product.quantity <= 0}
                           data-id="v9m0rk1hq"
                           data-path="src/pages/SalesPage.tsx"
                         >
@@ -241,9 +288,7 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              updateQuantity(product.id, quantity - 1)
-                            }
+                            onClick={() => handleUpdateQuantity(product.id, quantity - 1)}
                             className="h-8 w-8 p-0"
                             data-id="kif5wc0nn"
                             data-path="src/pages/SalesPage.tsx"
@@ -264,10 +309,9 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              updateQuantity(product.id, quantity + 1)
-                            }
+                            onClick={() => handleUpdateQuantity(product.id, quantity + 1)}
                             className="h-8 w-8 p-0"
+                            disabled={product.quantity <= 0}
                             data-id="6q29rea0p"
                             data-path="src/pages/SalesPage.tsx"
                           >
@@ -375,9 +419,7 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                             className="h-6 w-6 p-0"
                             data-id="ckkg26fq3"
                             data-path="src/pages/SalesPage.tsx"
@@ -398,10 +440,9 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                             className="h-6 w-6 p-0"
+                            disabled={products.find(p => p.id === item.id)?.quantity <= 0}
                             data-id="1tog5utdu"
                             data-path="src/pages/SalesPage.tsx"
                           >
@@ -414,7 +455,7 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                             data-id="xv73d916w"
                             data-path="src/pages/SalesPage.tsx"
