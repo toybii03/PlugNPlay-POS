@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Store,
   ShoppingCart,
   Package,
   Users,
@@ -98,15 +97,11 @@ const Sidebar: React.FC = () => {
           data-id="4i5yxd8zo"
           data-path="src/components/layout/Sidebar.tsx"
         >
-          <div
-            className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg"
-            data-id="hsa3ydyd5"
-            data-path="src/components/layout/Sidebar.tsx"
-          >
-            <Store
-              className="h-6 w-6 text-blue-600 dark:text-blue-400"
-              data-id="m0wdyfa31"
-              data-path="src/components/layout/Sidebar.tsx"
+          <div className="flex items-center justify-center">
+            <img
+              src="/images/plugnplay.JPEG"
+              alt=""
+              className="h-10 w-auto"
             />
           </div>
           <div
@@ -118,7 +113,7 @@ const Sidebar: React.FC = () => {
               data-id="f0w25e7xq"
               data-path="src/components/layout/Sidebar.tsx"
             >
-              POS System
+              PlugNPlay
             </h1>
             <p
               className="text-sm text-gray-500 dark:text-gray-400"

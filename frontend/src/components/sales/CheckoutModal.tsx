@@ -29,20 +29,35 @@ interface CheckoutModalProps {
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
   const { items, total, subtotal, tax, clearCart } = useCart();
   const { toast } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState<
-    "cash" | "card" | "digital"
-  >("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "digital">("cash");
   const [cashReceived, setCashReceived] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [discountAmount, setDiscountAmount] = useState<string>("0");
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">("fixed");
 
-  const change = parseFloat(cashReceived) - total;
+  // Calculate discount value
+  const calculateDiscount = () => {
+    const discountValue = parseFloat(discountAmount) || 0;
+    if (discountType === "percentage") {
+      return (subtotal * discountValue) / 100;
+    }
+    return discountValue;
+  };
+
+  // Calculate final total with discount
+  const discount = calculateDiscount();
+  const finalSubtotal = subtotal - discount;
+  const finalTax = (finalSubtotal * 0.08); // 8% tax
+  const finalTotal = finalSubtotal + finalTax;
+
+  const change = parseFloat(cashReceived) - finalTotal;
 
   const handlePayment = async () => {
-    if (paymentMethod === "cash" && parseFloat(cashReceived) < total) {
+    if (paymentMethod === "cash" && parseFloat(cashReceived) < finalTotal) {
       toast({
         title: "Insufficient Payment",
         description: "Cash received is less than the total amount.",
@@ -83,22 +98,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
       }
 
       const paymentResponse = await recordPayment({
-        subtotal,
-        tax,
-        discount: 0,
-        total,
-        paid_amount:
-          paymentMethod === "cash" ? parseFloat(cashReceived) : total,
-        due_amount:
-          paymentMethod === "cash" ? parseFloat(cashReceived) - total : 0,
+        subtotal: finalSubtotal,
+        tax: finalTax,
+        discount,
+        total: finalTotal,
+        paid_amount: paymentMethod === "cash" ? parseFloat(cashReceived) : finalTotal,
+        due_amount: paymentMethod === "cash" ? parseFloat(cashReceived) - finalTotal : 0,
         payment_method: paymentMethod === "digital" ? "gcash" : paymentMethod,
         customer_id: customerId,
         status: "completed",
-        notes: `Customer: ${customerName || "N/A"}, Phone: ${
-          customerPhone || "N/A"
-        }, Email: ${customerEmail || "N/A"}, Customer ID: ${
-          customerId || "N/A"
-        }`,
+        notes: `Customer: ${customerName || "N/A"}, Phone: ${customerPhone || "N/A"}, Email: ${customerEmail || "N/A"}, Customer ID: ${customerId || "N/A"}`,
         items: items.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
@@ -117,15 +126,14 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
 
         // Format currency for better display
         const formatCurrency = (amount: number) => {
-          return Number(amount).toFixed(2);  // Return just the number for Make.com
+          return Number(amount).toFixed(2);
         };
 
         // Calculate change amount
         const changeAmount = paymentMethod === "cash" 
-          ? Math.max(0, parseFloat(cashReceived) - total)
+          ? Math.max(0, parseFloat(cashReceived) - finalTotal)
           : 0;
 
-        // Create items array first for debugging
         const itemsList = items.map(item => ({
           name: item.name,
           qty: item.quantity,
@@ -133,23 +141,24 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
           total: formatCurrency(Number(item.quantity) * Number(item.price))
         }));
 
-        console.log("Items list:", itemsList);
-
         const webhookData = {
           transaction_id: paymentResponse.data.id,
           date: new Date().toLocaleString(),
-          cashier_name: user.name || "Unknown",
+          cashier_name: user.name || "Super Vincent",
           payment_method: paymentMethod.toUpperCase(),
-          amount_paid: formatCurrency(paymentMethod === "cash" ? parseFloat(cashReceived) : total),
+          amount_paid: formatCurrency(paymentMethod === "cash" ? parseFloat(cashReceived) : finalTotal),
           change_amount: formatCurrency(changeAmount),
           customer_name: customerName || "N/A",
           customer_email: customerEmail || "N/A",
           customer_phone: customerPhone || "N/A",
           items: itemsList,
           subtotal: formatCurrency(subtotal),
-          tax: formatCurrency(tax),
-          total: formatCurrency(total),
-          to_email: customerEmail || "*",  // Use customer email or fallback
+          discount_type: discountType,
+          discount_amount: formatCurrency(parseFloat(discountAmount) || 0),
+          discount_value: formatCurrency(discount),
+          tax: formatCurrency(finalTax),
+          total: formatCurrency(finalTotal),
+          to_email: customerEmail || "*",
           subject: `Receipt for Transaction #${paymentResponse.data.id}`
         };
 
@@ -225,241 +234,102 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={handleClose}
-      data-id="7bd6tx1gp"
-      data-path="src/components/sales/CheckoutModal.tsx"
-    >
-      <DialogContent
-        className="max-w-2xl"
-        data-id="bz9rhi0ir"
-        data-path="src/components/sales/CheckoutModal.tsx"
-      >
-        <DialogHeader
-          data-id="2ah8g7g27"
-          data-path="src/components/sales/CheckoutModal.tsx"
-        >
-          <DialogTitle
-            className="flex items-center"
-            data-id="pwlo7iir3"
-            data-path="src/components/sales/CheckoutModal.tsx"
-          >
-            <CreditCard
-              className="mr-2 h-5 w-5"
-              data-id="140su75ky"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            />
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <CreditCard className="mr-2 h-5 w-5" />
             Checkout
           </DialogTitle>
         </DialogHeader>
 
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          data-id="g5grwljys"
-          data-path="src/components/sales/CheckoutModal.tsx"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Order Summary */}
-          <div
-            className="space-y-4"
-            data-id="uxewg15cl"
-            data-path="src/components/sales/CheckoutModal.tsx"
-          >
-            <h3
-              className="font-semibold text-lg"
-              data-id="1m3k9276a"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
-              Order Summary
-            </h3>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Order Summary</h3>
 
-            <div
-              className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-3"
-              data-id="w012lejuy"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
+            <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-3">
               {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center"
-                  data-id="ce9ag2aks"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <div
-                    data-id="8hun6e0at"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    <p
-                      className="text-sm font-medium"
-                      data-id="cd3ig9xsg"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    >
-                      {item.name}
-                    </p>
-                    <p
-                      className="text-xs text-gray-500"
-                      data-id="43gju72fx"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    >
-                      ${Number(item.price).toFixed(2)} × {item.quantity}
-                    </p>
+                <div key={item.id} className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs text-gray-500">${Number(item.price).toFixed(2)} × {item.quantity}</p>
                   </div>
-                  <span
-                    className="text-sm font-medium"
-                    data-id="774794igj"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    ₱{(Number(item.price) * item.quantity).toFixed(2)}
-                  </span>
+                  <span className="text-sm font-medium">₱{(Number(item.price) * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
-            <div
-              className="space-y-2 pt-3 border-t"
-              data-id="dxhw41vyq"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
-              <div
-                className="flex justify-between"
-                data-id="ghayvnjms"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <span
-                  className="text-gray-600"
-                  data-id="ly4y9vp27"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  Subtotal:
-                </span>
-                <span
-                  data-id="sazjphsyc"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  ₱{subtotal.toFixed(2)}
-                </span>
+            <div className="space-y-2 pt-3 border-t">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal:</span>
+                <span>₱{subtotal.toFixed(2)}</span>
               </div>
-              <div
-                className="flex justify-between"
-                data-id="ijnppbowl"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <span
-                  className="text-gray-600"
-                  data-id="gamqqodu6"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  Tax (8%):
-                </span>
-                <span
-                  data-id="v9ia0tjk0"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  ₱{tax.toFixed(2)}
-                </span>
+
+              {/* Discount Section */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <select 
+                    value={discountType}
+                    onChange={(e) => setDiscountType(e.target.value as "percentage" | "fixed")}
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                  >
+                    <option value="fixed">Fixed (₱)</option>
+                    <option value="percentage">Percentage (%)</option>
+                  </select>
+                  <Input
+                    type="number"
+                    min="0"
+                    step={discountType === "percentage" ? "1" : "0.01"}
+                    max={discountType === "percentage" ? "100" : undefined}
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(e.target.value)}
+                    placeholder={discountType === "percentage" ? "Discount %" : "Discount amount"}
+                    className="flex-1"
+                  />
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount:</span>
+                    <span>-₱{discount.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
-              <div
-                className="flex justify-between text-lg font-bold"
-                data-id="dqs5zvztg"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <span
-                  className="text-gray-600"
-                  data-id="12yypjcu9"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  Total:
-                </span>
-                <span
-                  data-id="a0z8h8nfd"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  ₱{total.toFixed(2)}
-                </span>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">Tax (8%):</span>
+                <span>₱{finalTax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold">
+                <span className="text-gray-600">Total:</span>
+                <span>₱{finalTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
 
           {/* Payment Methods */}
-          <div
-            className="space-y-4"
-            data-id="3q6cllrxz"
-            data-path="src/components/sales/CheckoutModal.tsx"
-          >
-            <h3
-              className="font-semibold text-lg"
-              data-id="ws9b5pwri"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
-              Payment Method
-            </h3>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Payment Method</h3>
 
-            <Tabs
-              value={paymentMethod}
-              onValueChange={(value) => setPaymentMethod(value as any)}
-              data-id="czqu95kol"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
-              <TabsList
-                className="grid w-full grid-cols-3"
-                data-id="8euxeq9n5"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <TabsTrigger
-                  value="cash"
-                  data-id="1z4lg9p44"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <DollarSign
-                    className="h-4 w-4 mr-1"
-                    data-id="zlvsisebq"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  />
+            <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as any)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="cash">
+                  <DollarSign className="h-4 w-4 mr-1" />
                   Cash
                 </TabsTrigger>
-                <TabsTrigger
-                  value="card"
-                  data-id="bz3do6uam"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <CreditCard
-                    className="h-4 w-4 mr-1"
-                    data-id="gvovfwdzr"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  />
+                <TabsTrigger value="card">
+                  <CreditCard className="h-4 w-4 mr-1" />
                   Card
                 </TabsTrigger>
-                <TabsTrigger
-                  value="digital"
-                  data-id="mrmr6tkt4"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <Smartphone
-                    className="h-4 w-4 mr-1"
-                    data-id="0iw3s9pgv"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  />
+                <TabsTrigger value="digital">
+                  <Smartphone className="h-4 w-4 mr-1" />
                   Digital
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent
-                value="cash"
-                className="space-y-4"
-                data-id="bvrdgmhnn"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <div
-                  data-id="nghglghnb"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <Label
-                    htmlFor="cashReceived"
-                    data-id="x6duaa1d0"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    Cash Received
-                  </Label>
+              <TabsContent value="cash" className="space-y-4">
+                <div>
+                  <Label htmlFor="cashReceived">Cash Received</Label>
                   <Input
                     id="cashReceived"
                     type="number"
@@ -468,57 +338,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setCashReceived(e.target.value)}
                     placeholder="Enter amount received"
                     className="text-lg h-12"
-                    data-id="da2yn3fcv"
-                    data-path="src/components/sales/CheckoutModal.tsx"
                   />
                 </div>
-                {cashReceived && parseFloat(cashReceived) >= total && (
-                  <div
-                    className="p-3 bg-green-50 dark:bg-green-900 rounded-lg"
-                    data-id="fev10xzhe"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    <div
-                      className="flex justify-between items-center"
-                      data-id="yttvfhq8t"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    >
-                      <span
-                        className="text-green-800 dark:text-green-200 font-medium"
-                        data-id="r81iymszf"
-                        data-path="src/components/sales/CheckoutModal.tsx"
-                      >
-                        Change:
-                      </span>
-                      <span
-                        className="text-lg font-bold text-green-800 dark:text-green-200"
-                        data-id="29e200p0e"
-                        data-path="src/components/sales/CheckoutModal.tsx"
-                      >
-                        ₱{change.toFixed(2)}
-                      </span>
+                {cashReceived && parseFloat(cashReceived) >= finalTotal && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-green-800 dark:text-green-200 font-medium">Change:</span>
+                      <span className="text-lg font-bold text-green-800 dark:text-green-200">₱{change.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent
-                value="card"
-                className="space-y-4"
-                data-id="p7fvwr4y6"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <div
-                  data-id="xpiraq9dh"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <Label
-                    htmlFor="cardNumber"
-                    data-id="ihuzojv41"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    Card Number
-                  </Label>
+              <TabsContent value="card" className="space-y-4">
+                <div>
+                  <Label htmlFor="cardNumber">Card Number</Label>
                   <Input
                     id="cardNumber"
                     type="text"
@@ -526,65 +360,22 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setCardNumber(e.target.value)}
                     placeholder="**** **** **** 1234"
                     className="text-lg h-12"
-                    data-id="uernsma6k"
-                    data-path="src/components/sales/CheckoutModal.tsx"
                   />
                 </div>
-                <Badge
-                  variant="outline"
-                  className="w-full justify-center py-2"
-                  data-id="gnh4b0pw5"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <CheckCircle
-                    className="h-4 w-4 mr-2"
-                    data-id="r6gb4b0vr"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  />
+                <Badge variant="outline" className="w-full justify-center py-2">
+                  <CheckCircle className="h-4 w-4 mr-2" />
                   Card Terminal Ready
                 </Badge>
               </TabsContent>
 
-              <TabsContent
-                value="digital"
-                className="space-y-4"
-                data-id="jrss3qyki"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <div
-                  className="text-center space-y-4"
-                  data-id="gmk8dqx5k"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <div
-                    className="p-8 border-2 border-dashed rounded-lg"
-                    data-id="cm6ftacng"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    <Smartphone
-                      className="h-12 w-12 mx-auto mb-4 text-gray-400"
-                      data-id="z7fstgqys"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    />
-                    <p
-                      className="text-gray-600"
-                      data-id="qadnywjyk"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    >
-                      Show QR code to customer
-                    </p>
+              <TabsContent value="digital" className="space-y-4">
+                <div className="text-center space-y-4">
+                  <div className="p-8 border-2 border-dashed rounded-lg">
+                    <Smartphone className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600">Show QR code to customer</p>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className="w-full justify-center py-2"
-                    data-id="5el03wh5t"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    <CheckCircle
-                      className="h-4 w-4 mr-2"
-                      data-id="6cwgqbg2x"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    />
+                  <Badge variant="outline" className="w-full justify-center py-2">
+                    <CheckCircle className="h-4 w-4 mr-2" />
                     Digital Payment Ready
                   </Badge>
                 </div>
@@ -592,126 +383,54 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose }) => {
             </Tabs>
 
             {/* Customer Information */}
-            <div
-              className="space-y-3"
-              data-id="3oo4xwlj4"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
-              <h4
-                className="font-medium"
-                data-id="kopfvxq99"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                Customer Information (Optional)
-              </h4>
-              <div
-                className="grid grid-cols-1 gap-3"
-                data-id="joljkwk87"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
-                <div
-                  data-id="2ovvfgbya"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <Label
-                    htmlFor="customerName"
-                    data-id="11n45avfw"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    Name
-                  </Label>
+            <div className="space-y-3">
+              <h4 className="font-medium">Customer Information (Optional)</h4>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label htmlFor="customerName">Name</Label>
                   <Input
                     id="customerName"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Customer name"
-                    data-id="vz19hrusr"
-                    data-path="src/components/sales/CheckoutModal.tsx"
                   />
                 </div>
-                <div
-                  data-id="itwfs7nq0"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <Label
-                    htmlFor="customerPhone"
-                    data-id="djim815bc"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    Phone
-                  </Label>
+                <div>
+                  <Label htmlFor="customerPhone">Phone</Label>
                   <Input
                     id="customerPhone"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Customer phone"
-                    data-id="u18bi50fq"
-                    data-path="src/components/sales/CheckoutModal.tsx"
                   />
                 </div>
-                <div
-                  data-id="newemailfield"
-                  data-path="src/components/sales/CheckoutModal.tsx"
-                >
-                  <Label
-                    htmlFor="customerEmail"
-                    data-id="newemailfieldlabel"
-                    data-path="src/components/sales/CheckoutModal.tsx"
-                  >
-                    Email
-                  </Label>
+                <div>
+                  <Label htmlFor="customerEmail">Email</Label>
                   <Input
                     id="customerEmail"
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="Customer email"
-                    data-id="newemailfieldinput"
-                    data-path="src/components/sales/CheckoutModal.tsx"
                   />
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div
-              className="flex space-x-3 pt-4"
-              data-id="hztaa9rp8"
-              data-path="src/components/sales/CheckoutModal.tsx"
-            >
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                disabled={isProcessing}
-                className="flex-1"
-                data-id="be54b9jd3"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
+            <div className="flex space-x-3 pt-4">
+              <Button variant="outline" onClick={handleClose} disabled={isProcessing} className="flex-1">
                 Cancel
               </Button>
-              <Button
-                onClick={handlePayment}
-                disabled={isProcessing || items.length === 0}
-                className="flex-1"
-                data-id="4sldamcuj"
-                data-path="src/components/sales/CheckoutModal.tsx"
-              >
+              <Button onClick={handlePayment} disabled={isProcessing || items.length === 0} className="flex-1">
                 {isProcessing ? (
                   <>
-                    <div
-                      className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
-                      data-id="oryjr6t3s"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    ></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Processing...
                   </>
                 ) : (
                   <>
-                    <Printer
-                      className="h-4 w-4 mr-2"
-                      data-id="rdrhdq6f1"
-                      data-path="src/components/sales/CheckoutModal.tsx"
-                    />
+                    <Printer className="h-4 w-4 mr-2" />
                     Complete Sale
                   </>
                 )}
