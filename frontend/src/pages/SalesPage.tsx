@@ -47,8 +47,8 @@ const SalesPage: React.FC = () => {
 
   // Function to update product stock in the local state
   const updateProductStock = (productId: string, newQuantity: number) => {
-    setProducts(prevProducts =>
-      prevProducts.map(product =>
+    setProducts((prevProducts) =>
+      prevProducts.map((product) =>
         product.id === productId
           ? { ...product, quantity: newQuantity }
           : product
@@ -66,9 +66,9 @@ const SalesPage: React.FC = () => {
 
   // Enhanced updateQuantity handler
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
-    const product = products.find(p => p.id === productId);
-    const currentItem = items.find(item => item.id === productId);
-    
+    const product = products.find((p) => p.id === productId);
+    const currentItem = items.find((item) => item.id === productId);
+
     if (!product || !currentItem) return;
 
     const quantityDiff = newQuantity - currentItem.quantity;
@@ -82,9 +82,9 @@ const SalesPage: React.FC = () => {
 
   // Enhanced removeItem handler
   const handleRemoveItem = (productId: string) => {
-    const item = items.find(item => item.id === productId);
-    const product = products.find(p => p.id === productId);
-    
+    const item = items.find((item) => item.id === productId);
+    const product = products.find((p) => p.id === productId);
+
     if (item && product) {
       removeItem(productId);
       updateProductStock(productId, product.quantity + item.quantity);
@@ -122,7 +122,7 @@ const SalesPage: React.FC = () => {
             data-id="5f7rignpf"
             data-path="src/pages/SalesPage.tsx"
           >
-            Point of Sale
+            Sales
           </h1>
           <p
             className="text-gray-600 dark:text-gray-400"
@@ -288,7 +288,9 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleUpdateQuantity(product.id, quantity - 1)}
+                            onClick={() =>
+                              handleUpdateQuantity(product.id, quantity - 1)
+                            }
                             className="h-8 w-8 p-0"
                             data-id="kif5wc0nn"
                             data-path="src/pages/SalesPage.tsx"
@@ -309,7 +311,9 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleUpdateQuantity(product.id, quantity + 1)}
+                            onClick={() =>
+                              handleUpdateQuantity(product.id, quantity + 1)
+                            }
                             className="h-8 w-8 p-0"
                             disabled={product.quantity <= 0}
                             data-id="6q29rea0p"
@@ -419,7 +423,9 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity - 1)
+                            }
                             className="h-6 w-6 p-0"
                             data-id="ckkg26fq3"
                             data-path="src/pages/SalesPage.tsx"
@@ -440,9 +446,14 @@ const SalesPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                            onClick={() =>
+                              handleUpdateQuantity(item.id, item.quantity + 1)
+                            }
                             className="h-6 w-6 p-0"
-                            disabled={products.find(p => p.id === item.id)?.quantity <= 0}
+                            disabled={
+                              products.find((p) => p.id === item.id)
+                                ?.quantity <= 0
+                            }
                             data-id="1tog5utdu"
                             data-path="src/pages/SalesPage.tsx"
                           >

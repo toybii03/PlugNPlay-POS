@@ -4,7 +4,6 @@ import {
   ShoppingCart,
   Package,
   Users,
-  DollarSign,
   AlertTriangle,
   Clock,
   CheckCircle,
@@ -30,9 +29,7 @@ const DashboardPage: React.FC = () => {
       try {
         const response = await api.get("/payments");
         const payments = response.data.data || [];
-        // Map payments to recentSales format
         const mappedSales = payments.map((payment: any) => {
-          // Format time from date string to "hh:mm AM/PM"
           const dateObj = new Date(payment.date);
           const timeString = dateObj.toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -77,296 +74,116 @@ const DashboardPage: React.FC = () => {
   };
 
   const lowStockProducts = data.low_stock_products || [];
-
   const filteredLowStockProducts = lowStockProducts.filter(
     (product) => product.quantity <= product.alert_quantity
   );
 
   return (
-    <div
-      className="space-y-6"
-      data-id="8x9bxykb2"
-      data-path="src/pages/DashboardPage.tsx"
-    >
+    <div className="space-y-6">
       {/* Header */}
-      <div data-id="6xhup0lpp" data-path="src/pages/DashboardPage.tsx">
-        <h1
-          className="text-3xl font-bold text-gray-900 dark:text-white"
-          data-id="t5iov2lyj"
-          data-path="src/pages/DashboardPage.tsx"
-        >
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Dashboard
         </h1>
-        <p
-          className="text-gray-600 dark:text-gray-400"
-          data-id="nyv0xokrg"
-          data-path="src/pages/DashboardPage.tsx"
-        >
+        <p className="text-gray-600 dark:text-gray-400">
           Overview of your store performance
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-        data-id="e7ogxq9ka"
-        data-path="src/pages/DashboardPage.tsx"
-      >
-        <Card data-id="bm4z4lslk" data-path="src/pages/DashboardPage.tsx">
-          <CardHeader
-            className="flex flex-row items-center justify-between space-y-0 pb-2"
-            data-id="6og1oovut"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <CardTitle
-              className="text-sm font-medium"
-              data-id="royd7z1ek"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              Today's Sales
-            </CardTitle>
-            <DollarSign
-              className="h-4 w-4 text-green-600"
-              data-id="i29plo93f"
-              data-path="src/pages/DashboardPage.tsx"
-            />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
+            <span className="text-lg font-bold text-green-600">₱</span>
           </CardHeader>
-          <CardContent
-            data-id="ya9e3i7zz"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <div
-              className="text-2xl font-bold"
-              data-id="t1p0gwlmb"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+          <CardContent>
+            <div className="text-2xl font-bold">
               ₱{stats.todaySales.toFixed(2)}
             </div>
-            <p
-              className="text-xs text-gray-500 dark:text-gray-400"
-              data-id="2aaqxlkcg"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               +12.5% from yesterday
             </p>
           </CardContent>
         </Card>
 
-        <Card data-id="vduhj3stw" data-path="src/pages/DashboardPage.tsx">
-          <CardHeader
-            className="flex flex-row items-center justify-between space-y-0 pb-2"
-            data-id="ono307yp3"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <CardTitle
-              className="text-sm font-medium"
-              data-id="y4qbz241r"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              Transactions
-            </CardTitle>
-            <ShoppingCart
-              className="h-4 w-4 text-blue-600"
-              data-id="h8hzfkpby"
-              data-path="src/pages/DashboardPage.tsx"
-            />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent
-            data-id="f68p8ggr6"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <div
-              className="text-2xl font-bold"
-              data-id="uiji4krz8"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              {stats.todayTransactions}
-            </div>
-            <p
-              className="text-xs text-gray-500 dark:text-gray-400"
-              data-id="qfbyzvuva"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.todayTransactions}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               +8.2% from yesterday
             </p>
           </CardContent>
         </Card>
 
-        <Card data-id="bd76dmvmd" data-path="src/pages/DashboardPage.tsx">
-          <CardHeader
-            className="flex flex-row items-center justify-between space-y-0 pb-2"
-            data-id="sew4m7h3s"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <CardTitle
-              className="text-sm font-medium"
-              data-id="sehdnnid5"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Total Products
             </CardTitle>
-            <Package
-              className="h-4 w-4 text-purple-600"
-              data-id="tfz5k8q34"
-              data-path="src/pages/DashboardPage.tsx"
-            />
+            <Package className="h-4 w-4 text-purple-600" />
           </CardHeader>
-          <CardContent
-            data-id="ya7uviyfr"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <div
-              className="text-2xl font-bold"
-              data-id="vhhz9kzw2"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              {stats.totalProducts}
-            </div>
-            <p
-              className="text-xs text-gray-500 dark:text-gray-400"
-              data-id="d6x5hso8x"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalProducts}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {stats.lowStockItems} low stock items
             </p>
           </CardContent>
         </Card>
 
-        <Card data-id="tgkkj61j7" data-path="src/pages/DashboardPage.tsx">
-          <CardHeader
-            className="flex flex-row items-center justify-between space-y-0 pb-2"
-            data-id="eoihpzzuf"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <CardTitle
-              className="text-sm font-medium"
-              data-id="r5u585n8x"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              Customers
-            </CardTitle>
-            <Users
-              className="h-4 w-4 text-orange-600"
-              data-id="zys3a90bb"
-              data-path="src/pages/DashboardPage.tsx"
-            />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Customers</CardTitle>
+            <Users className="h-4 w-4 text-orange-600" />
           </CardHeader>
-          <CardContent
-            data-id="m66quzjs7"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <div
-              className="text-2xl font-bold"
-              data-id="7023pfcdb"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              {stats.totalCustomers}
-            </div>
-            <p
-              className="text-xs text-gray-500 dark:text-gray-400"
-              data-id="74xfj06du"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               +5.1% this month
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-        data-id="fvio2mxpq"
-        data-path="src/pages/DashboardPage.tsx"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Sales */}
-        <Card data-id="4vw5s7ryg" data-path="src/pages/DashboardPage.tsx">
-          <CardHeader
-            data-id="9epfwrrek"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <CardTitle
-              className="flex items-center"
-              data-id="b9c6xkvw9"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              <Clock
-                className="mr-2 h-5 w-5"
-                data-id="qgi6u9edj"
-                data-path="src/pages/DashboardPage.tsx"
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="mr-2 h-5 w-5" />
               Recent Sales
             </CardTitle>
           </CardHeader>
-          <CardContent
-            data-id="65cqijh1r"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <div
-              className="space-y-4"
-              data-id="rtmpdjoio"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+          <CardContent>
+            <div className="space-y-4">
               {recentSales.map((sale) => (
                 <div
                   key={sale.id}
                   className="flex items-center justify-between"
-                  data-id="rhw56usih"
-                  data-path="src/pages/DashboardPage.tsx"
                 >
-                  <div
-                    className="flex items-center space-x-3"
-                    data-id="6p3fuk5nt"
-                    data-path="src/pages/DashboardPage.tsx"
-                  >
-                    <div
-                      className="flex-shrink-0"
-                      data-id="5xm6eivcf"
-                      data-path="src/pages/DashboardPage.tsx"
-                    >
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
                       {sale.status === "completed" ? (
-                        <CheckCircle
-                          className="h-5 w-5 text-green-500"
-                          data-id="7ibkz3p28"
-                          data-path="src/pages/DashboardPage.tsx"
-                        />
+                        <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
-                        <Clock
-                          className="h-5 w-5 text-yellow-500"
-                          data-id="j0fq6h3mg"
-                          data-path="src/pages/DashboardPage.tsx"
-                        />
+                        <Clock className="h-5 w-5 text-yellow-500" />
                       )}
                     </div>
-                    <div
-                      data-id="eephrxxd1"
-                      data-path="src/pages/DashboardPage.tsx"
-                    >
-                      <p
-                        className="text-sm font-medium text-gray-900 dark:text-white"
-                        data-id="d0qc3u2e3"
-                        data-path="src/pages/DashboardPage.tsx"
-                      >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {sale.customer}
                       </p>
-                      <p
-                        className="text-xs text-gray-500 dark:text-gray-400"
-                        data-id="a73phsjel"
-                        data-path="src/pages/DashboardPage.tsx"
-                      >
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {sale.time}
                       </p>
                     </div>
                   </div>
-                  <div
-                    className="text-right"
-                    data-id="4ykxoihqr"
-                    data-path="src/pages/DashboardPage.tsx"
-                  >
-                    <p
-                      className="text-sm font-medium text-gray-900 dark:text-white"
-                      data-id="erv8g4v3j"
-                      data-path="src/pages/DashboardPage.tsx"
-                    >
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       ₱{sale.amount.toFixed(2)}
                     </p>
                     <p
@@ -375,8 +192,6 @@ const DashboardPage: React.FC = () => {
                           ? "text-green-600 dark:text-green-400"
                           : "text-yellow-600 dark:text-yellow-400"
                       }`}
-                      data-id="zfd6s09ie"
-                      data-path="src/pages/DashboardPage.tsx"
                     >
                       {sale.status}
                     </p>
@@ -388,69 +203,27 @@ const DashboardPage: React.FC = () => {
         </Card>
 
         {/* Low Stock Alert */}
-        <Card data-id="iyr87xb7t" data-path="src/pages/DashboardPage.tsx">
-          <CardHeader
-            data-id="8yn7o5p28"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <CardTitle
-              className="flex items-center text-orange-600"
-              data-id="q0k5spqk6"
-              data-path="src/pages/DashboardPage.tsx"
-            >
-              <AlertTriangle
-                className="mr-2 h-5 w-5"
-                data-id="zqwveudvj"
-                data-path="src/pages/DashboardPage.tsx"
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-orange-600">
+              <AlertTriangle className="mr-2 h-5 w-5" />
               Low Stock Alert
             </CardTitle>
           </CardHeader>
-          <CardContent
-            data-id="z15879c4d"
-            data-path="src/pages/DashboardPage.tsx"
-          >
-            <div
-              className="space-y-4"
-              data-id="0nb69y60v"
-              data-path="src/pages/DashboardPage.tsx"
-            >
+          <CardContent>
+            <div className="space-y-4">
               {filteredLowStockProducts.map((product, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between"
-                  data-id="8ediqulxl"
-                  data-path="src/pages/DashboardPage.tsx"
-                >
-                  <div
-                    data-id="g1kkpo3j9"
-                    data-path="src/pages/DashboardPage.tsx"
-                  >
-                    <p
-                      className="text-sm font-medium text-gray-900 dark:text-white"
-                      data-id="66wmphn61"
-                      data-path="src/pages/DashboardPage.tsx"
-                    >
+                <div key={index} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {product.name}
                     </p>
-                    <p
-                      className="text-xs text-gray-500 dark:text-gray-400"
-                      data-id="wa9g23qfw"
-                      data-path="src/pages/DashboardPage.tsx"
-                    >
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Min stock: {product.alert_quantity}
                     </p>
                   </div>
-                  <div
-                    className="text-right"
-                    data-id="ssk2yxdg2"
-                    data-path="src/pages/DashboardPage.tsx"
-                  >
-                    <span
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      data-id="0f1m0x1ha"
-                      data-path="src/pages/DashboardPage.tsx"
-                    >
+                  <div className="text-right">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                       {product.quantity} left
                     </span>
                   </div>
